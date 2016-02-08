@@ -30,7 +30,6 @@ void* run_server(void* map) {
         client_count++;
 	printf("Received connection.. %d\n", client_count);
     }
-
     return NULL;
 }
 
@@ -69,12 +68,13 @@ int open_client_connection(struct sockaddr_in echoServAddr) {
     return fd;
 }
 
-void* run_client(void** fd) {
+void* run_client(void* fd) {
     int peer_fd[MESH_SIZE];
     int i = 0, j = 0;
     char echoString[BATCH_SIZE];
+    int iof = -1;
 
-    memcpy(peer_fd, *fd, MESH_SIZE);
+    memcpy(peer_fd, fd, 4*MESH_SIZE);
 
     /*
      * Create a 1MB of data to be sent to the server 
@@ -92,12 +92,21 @@ void* run_client(void** fd) {
 	    if(j == self_id) {
      		continue;
 	    }
-            int k = send(peer_fd[j], echoString, BATCH_SIZE, 0);
+	    int temp_fd = peer_fd[j];
+	    printf("%d\n", temp_fd);
+	    if ((iof = fcntl(temp_fd, F_GETFL, 0)) != -1)
+	        fcntl(temp_fd, F_SETFL, iof | O_NONBLOCK);
+	    // receive
+	    int k = send(temp_fd, echoString, BATCH_SIZE, 0);
+	    // set as before
+	    if (iof != -1)
+	        fcntl(temp_fd, F_SETFL, iof);
 	    if(k == -1) {
-		printf("Error in sending data to %d with error %d: peer_fd=%d\n", j, errno, peer_fd[j]);
+		printf("Error in sending data to %d with error %d: peer_fd=%d\n", j, errno, temp_fd);
 	    }
         }
         i++;
+	sleep(0.01);
         pthread_yield();
     }
 
@@ -178,7 +187,7 @@ int main(int argc, char* argv[])
     }
     printf("client count %d\n", client_count);
 
-    rc = pthread_create(&client_thread, NULL, run_client, (void**)&peer_fd);
+    rc = pthread_create(&client_thread, NULL, run_client, (void*)peer_fd);
     if(rc != 0) {
         fprintf(stderr, "Failed to create client thread\n");
         return 0;

@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <sys/socket.h>
 #include <sys/select.h>
 #include <sys/types.h>
