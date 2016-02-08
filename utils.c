@@ -22,13 +22,13 @@ void build_sockaddr(char* ip_str, struct sockaddr_in* address) {
     }
 
     address->sin_family = AF_INET;
-    address->sin_addr.s_addr = htonl(ip);
+    address->sin_addr.s_addr = ip;
     address->sin_port = htons(BASE_SERVER_PORT);
 }
 
 int find_self_id(struct peer* peer_list){
     struct in_addr p = find_eth0_ip_address();
-    int self_addr = htonl(p.s_addr);
+    int self_addr = p.s_addr;
     int i = 0;
 
     for(i = 0; i < MESH_SIZE; i++) {

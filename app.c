@@ -20,12 +20,14 @@ void* run_server(void* map) {
     int count = 0;
     while(1) {
         struct sockaddr_in client_addr;
+	printf("Listening... %d, %d\n", self.sin_addr.s_addr, self.sin_port);
         int connfd = accept(listenfd, &client_addr, &len);
         //int count = get_value(map, client_addr);
         client[count].connfd = connfd;
         memcpy(&client[count].client_addr, &client_addr, sizeof(struct sockaddr_in));
         count++;
         client_count++;
+	printf("Received connection.. %d\n", client_count);
     }
 
     return NULL;
@@ -53,6 +55,7 @@ int open_client_connection(struct sockaddr_in echoServAddr) {
     }
 
     /* Establish the connection to the echo server */
+    printf("Trying to connect %d %d\n", echoServAddr.sin_addr.s_addr, echoServAddr.sin_port);
     while (connect(fd, (struct sockaddr *)&echoServAddr, sizeof(struct sockaddr_in)) < 0){
         //fprintf(stderr, "Connect failed\n");
         sleep(1);
@@ -60,7 +63,7 @@ int open_client_connection(struct sockaddr_in echoServAddr) {
 
     char ipstr[INET_ADDRSTRLEN];
     inet_ntop(AF_INET, &echoServAddr.sin_addr, ipstr, sizeof(ipstr));
-    fprintf(stderr, "Connected -- %s\n", ipstr);
+    printf("Connected -- %s\n", ipstr);
 
     return fd;
 }
@@ -145,6 +148,8 @@ int main(int argc, char* argv[])
 
     int self_id = find_self_id(peer_list);
     printf("Self-id %d\n", self_id);
+
+    memcpy(&self, &peer_list[self_id].s_addr, sizeof(struct sockaddr_in));
   
     void* map = NULL;
     rc = pthread_create(&server_thread, NULL, run_server, (void*)map);
@@ -161,8 +166,9 @@ int main(int argc, char* argv[])
         peer_fd[i] = open_client_connection(peer_list[i].s_addr);
     }
 
-    while(client_count < MESH_SIZE) {
+    while(client_count < MESH_SIZE-1) {
     }
+    printf("client count %d\n", client_count);
 
     rc = pthread_create(&client_thread, NULL, run_client, (void*)peer_fd);
     if(rc != 0) {
