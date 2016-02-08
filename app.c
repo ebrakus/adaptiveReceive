@@ -127,7 +127,7 @@ void smart_reception() {
 
     int maxfd = 0;
     FD_ZERO(&readset);
-    for(i = 0; i < MESH_SIZE; i++) {
+    for(i = 0; i < MESH_SIZE-1; i++) {
         int connfd = client[i].connfd;
         FD_SET(connfd, &readset);
         maxfd = (maxfd > connfd) ? maxfd : connfd;
@@ -145,6 +145,15 @@ void smart_reception() {
                 printf("%d.. is set\n", i);
             }
         }
+    }
+}
+
+void smart_reception_ioctl() {
+    int i;
+    int count[MESH_SIZE-1];
+    for(i = 0; i < MESH_SIZE-1; i++) {
+        ioctl(client[i].connfd, FIONREAD, &count[i]);
+        printf("%d -- %d\n", i, count[i]);
     }
 }
 
@@ -193,7 +202,8 @@ int main(int argc, char* argv[])
         return 0;
     }
 
-    smart_reception();
+    //smart_reception();
+    smart_reception_ioctl();
 
     pthread_join(server_thread, &res);
     pthread_join(client_thread, &res);
