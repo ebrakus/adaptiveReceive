@@ -66,3 +66,32 @@ int build_peer_list(struct peer* peer_list) {
     fclose(ifp);
     return 0;
 }
+
+bool is_max_min_far(struct client_socket_info* client, int max, int min, int max_delta) {
+    int max1 = client[max].bytes_received;
+    int min1 = client[min].bytes_received;
+    bool ret = false;
+
+    if((max1 - min1)/BATCH_SIZE*1.0 > max_delta) {
+        ret = true;
+    }
+    return ret;
+}
+
+void find_min_max(struct client_socket_info* client, int* max, int* min) {
+    int max1 = 0;
+    int min1 = 0;
+    int i;
+
+    for(i = 0; i < MESH_SIZE-1; i++) {
+        if(max1 < client[i].bytes_received) {
+            max1 = client[i].bytes_received;
+            *max = i;
+        }
+        if(min1 > client[i].bytes_received) {
+            min1 = client[i].bytes_received;
+            *min = i;
+        }
+    }
+}
+

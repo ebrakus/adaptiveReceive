@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <time.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -33,3 +34,5 @@ struct in_addr find_eth0_ip_address();
 void build_sockaddr(char* ip_str, struct sockaddr_in* address);
 int find_self_id(struct peer* peer_list);
 int build_peer_list(struct peer* peer_list);
+bool is_max_min_far(struct client_socket_info* client, int max, int min, int max_delta);
+void find_min_max(struct client_socket_info* client, int* max, int* min);

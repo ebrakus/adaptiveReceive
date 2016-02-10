@@ -2,7 +2,7 @@
 #include "utils.h"
 
 struct sockaddr_in self;
-struct client_socket_info client[MESH_SIZE];
+struct client_socket_info client[MESH_SIZE - 1];
 int client_count = 0;
 int self_id = -1;
 
@@ -117,7 +117,7 @@ void* run_client(void* fd) {
     return NULL;
 }
 
-void smart_reception() {
+void* smart_reception() {
     /* Walk all the sockets to see if data is available */
     int i, result = 0;
     fd_set readset;
@@ -148,23 +148,61 @@ void smart_reception() {
     }
 }
 
-void smart_reception_ioctl() {
+void* smart_reception_ioctl() {
     int i;
     int count[MESH_SIZE-1];
-    for(i = 0; i < MESH_SIZE-1; i++) {
-        ioctl(client[i].connfd, FIONREAD, &count[i]);
-        printf("%d -- %d\n", i, count[i]);
+    int max = 0;
+    int min = 0;
+    int n = 0;
+    char recvBuff[BATCH_SIZE];
+    int data_to_read = BATCH_SIZE;
+    int skip_max_min = 0;
+
+    while(1) {
+        skip_max_min = 0;
+        for(i = 0; i < MESH_SIZE-1; i++) {
+            ioctl(client[i].connfd, FIONREAD, &count[i]);
+            printf("%d -- %d\n", i, count[i]);
+        }
+
+        if(is_max_min_far(client, max, min, MAX_DELTA)) {
+            data_to_read = client[max].bytes_received;
+
+            n = read(client[min].connfd, recvBuff, count[min]);
+            client[min].bytes_received += n;
+            if(client[min].bytes_received > data_to_read) {
+                data_to_read = client[min].bytes_received;
+            }
+            skip_max_min = 1;
+        }
+
+        for(i = 0; i < MESH_SIZE-1; i++) {
+            if((i == max || i == min) && skip_max_min == 1) {
+                continue;
+            }
+            int temp_len = BATCH_SIZE;
+            if(data_to_read - skip_max_min*client[i].bytes_received > count[i]) {
+                temp_len = count[i];
+            }else {
+                temp_len = data_to_read - skip_max_min*client[i].bytes_received;
+            }
+            n = read(client[i].connfd, recvBuff, temp_len);
+            client[i].bytes_received += n;
+        }
+
+        find_min_max(client, &max, &min);
     }
 }
-
+                
 int main(int argc, char* argv[])
 {
     int rc = 0, i;
     void *res;
     struct peer peer_list[MESH_SIZE];
     int peer_fd[MESH_SIZE];
-    pthread_t client_thread, server_thread;
+    pthread_t client_thread, server_thread, smart_reception_thread;
 
+    memset(client, 0, sizeof(struct client_socket_info)*MESH_SIZE-1);
     rc = build_peer_list(peer_list);
     if(rc != 0) {
         fprintf(stderr, "Failed to build peer list\n");
@@ -202,10 +240,14 @@ int main(int argc, char* argv[])
         return 0;
     }
 
-    //smart_reception();
-    smart_reception_ioctl();
+    rc = pthread_create(&smart_reception_thread, NULL, smart_reception_ioctl, (void*)0);
+    if(rc != 0) {
+        fprintf(stderr, "Failed to create smart reception thread\n");
+        return 0;
+    }
 
     pthread_join(server_thread, &res);
     pthread_join(client_thread, &res);
+    pthread_join(smart_reception_thread, &res);
     return 0;
 }

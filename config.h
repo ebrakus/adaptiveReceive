@@ -7,4 +7,5 @@
 #define DOMAIN_NAME_SIZE 256
 #define MESH_SIZE 3
 #define IN_FILENAME "topology.txt"
+#define MAX_DELTA 0.5
 #endif
