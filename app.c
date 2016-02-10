@@ -149,6 +149,22 @@ void* smart_reception() {
     }
 }
 
+void* normal_reception() {
+    int i;
+    int n = 0;
+    char recvBuff[BATCH_SIZE];
+
+    while(1) {
+        for(i = 0; i < MESH_SIZE-1; i++) {
+            n = read(client[i].connfd, recvBuff, BATCH_SIZE);
+            client[i].bytes_received += n;
+            printf("%d ", client[i].bytes_received);
+        }
+	printf("\n");
+    }
+}
+ 
+
 void* smart_reception_ioctl() {
     int i;
     int count[MESH_SIZE-1];
@@ -161,16 +177,17 @@ void* smart_reception_ioctl() {
 
     while(1) {
         skip_max_min = 0;
-	printf("%d %d ------ %d %d\n", client[0].bytes_received, client[1].bytes_received, max, min);
+	//printf("%d %d ------ %d %d\n", client[0].bytes_received, client[1].bytes_received, max, min);
         for(i = 0; i < MESH_SIZE-1; i++) {
             ioctl(client[i].connfd, FIONREAD, &count[i]);
-            //printf("%d -- %d\n", i, count[i]);
+            printf("%d ", client[i].bytes_received);
         }
+	printf("\n");
 
         if(is_max_min_far(client, max, min, MAX_DELTA)) {
             data_to_read = client[max].bytes_received;
 
-            n = read(client[min].connfd, recvBuff, count[min]);
+            n = read(client[min].connfd, recvBuff, count[min] > BATCH_SIZE ? BATCH_SIZE : count[min]);
             client[min].bytes_received += n;
             if(client[min].bytes_received > data_to_read) {
                 data_to_read = client[min].bytes_received;
@@ -188,7 +205,7 @@ void* smart_reception_ioctl() {
             }else {
                 temp_len = data_to_read - skip_max_min*client[i].bytes_received;
             }
-            n = read(client[i].connfd, recvBuff, temp_len);
+            n = read(client[i].connfd, recvBuff, temp_len > BATCH_SIZE ? BATCH_SIZE : temp_len);
             client[i].bytes_received += n;
         }
 
@@ -242,7 +259,8 @@ int main(int argc, char* argv[])
         return 0;
     }
 
-    rc = pthread_create(&smart_reception_thread, NULL, smart_reception_ioctl, (void*)0);
+    //rc = pthread_create(&smart_reception_thread, NULL, smart_reception_ioctl, (void*)0);
+    rc = pthread_create(&smart_reception_thread, NULL, normal_reception, (void*)0);
     if(rc != 0) {
         fprintf(stderr, "Failed to create smart reception thread\n");
         return 0;

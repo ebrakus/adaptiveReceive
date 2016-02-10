@@ -5,7 +5,7 @@
 #define BASE_SERVER_PORT 5001
 #define BATCH_SIZE 1024*1024
 #define DOMAIN_NAME_SIZE 256
-#define MESH_SIZE 3
+#define MESH_SIZE 10
 #define IN_FILENAME "topology.txt"
 #define MAX_DELTA 0.5
 #endif
