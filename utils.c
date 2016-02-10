@@ -71,6 +71,7 @@ bool is_max_min_far(struct client_socket_info* client, int max, int min, int max
     int max1 = client[max].bytes_received;
     int min1 = client[min].bytes_received;
     bool ret = false;
+	//printf("Here %d %d\n", max1, min1);
 
     if((max1 - min1)/BATCH_SIZE*1.0 > max_delta) {
         ret = true;
@@ -79,9 +80,11 @@ bool is_max_min_far(struct client_socket_info* client, int max, int min, int max
 }
 
 void find_min_max(struct client_socket_info* client, int* max, int* min) {
-    int max1 = 0;
-    int min1 = 0;
+    int max1 = client[0].bytes_received;
+    int min1 = client[0].bytes_received;
     int i;
+    *max = 0;
+    *min = 0;
 
     for(i = 0; i < MESH_SIZE-1; i++) {
         if(max1 < client[i].bytes_received) {

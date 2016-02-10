@@ -87,13 +87,14 @@ void* run_client(void* fd) {
     /*
      * Keep sending 1MB of data to each server continuously
      */
-    while(i < ITERATIONS){
+    //while(i < ITERATIONS){
+    while(1){
         for(j = 0; j < MESH_SIZE; j++) {
 	    if(j == self_id) {
      		continue;
 	    }
 	    int temp_fd = peer_fd[j];
-	    printf("%d\n", temp_fd);
+	    //printf("%d\n", temp_fd);
 	    if ((iof = fcntl(temp_fd, F_GETFL, 0)) != -1)
 	        fcntl(temp_fd, F_SETFL, iof | O_NONBLOCK);
 	    // receive
@@ -102,7 +103,7 @@ void* run_client(void* fd) {
 	    if (iof != -1)
 	        fcntl(temp_fd, F_SETFL, iof);
 	    if(k == -1) {
-		printf("Error in sending data to %d with error %d: peer_fd=%d\n", j, errno, temp_fd);
+		//printf("Error in sending data to %d with error %d: peer_fd=%d\n", j, errno, temp_fd);
 	    }
         }
         i++;
@@ -160,9 +161,10 @@ void* smart_reception_ioctl() {
 
     while(1) {
         skip_max_min = 0;
+	printf("%d %d ------ %d %d\n", client[0].bytes_received, client[1].bytes_received, max, min);
         for(i = 0; i < MESH_SIZE-1; i++) {
             ioctl(client[i].connfd, FIONREAD, &count[i]);
-            printf("%d -- %d\n", i, count[i]);
+            //printf("%d -- %d\n", i, count[i]);
         }
 
         if(is_max_min_far(client, max, min, MAX_DELTA)) {
