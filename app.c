@@ -107,7 +107,7 @@ void* run_client(void* fd) {
 	    }
         }
         i++;
-	sleep(0.01);
+	//sleep(0.01);
         pthread_yield();
     }
 
@@ -153,8 +153,12 @@ void* normal_reception() {
     int i;
     int n = 0;
     char recvBuff[BATCH_SIZE];
+    struct timeval t, t1;
+    gettimeofday(&t, NULL);
 
     while(1) {
+        gettimeofday(&t1, NULL);
+	printf("%f ", time_diff(t, t1));
         for(i = 0; i < MESH_SIZE-1; i++) {
             n = read(client[i].connfd, recvBuff, BATCH_SIZE);
             client[i].bytes_received += n;
@@ -174,10 +178,14 @@ void* smart_reception_ioctl() {
     char recvBuff[BATCH_SIZE];
     int data_to_read = BATCH_SIZE;
     int skip_max_min = 0;
+    struct timeval t, t1;
+    gettimeofday(&t, NULL);
 
     while(1) {
         skip_max_min = 0;
 	//printf("%d %d ------ %d %d\n", client[0].bytes_received, client[1].bytes_received, max, min);
+        gettimeofday(&t1, NULL);
+	printf("%f ", time_diff(t, t1));
         for(i = 0; i < MESH_SIZE-1; i++) {
             ioctl(client[i].connfd, FIONREAD, &count[i]);
             printf("%d ", client[i].bytes_received);
@@ -259,8 +267,8 @@ int main(int argc, char* argv[])
         return 0;
     }
 
-    //rc = pthread_create(&smart_reception_thread, NULL, smart_reception_ioctl, (void*)0);
-    rc = pthread_create(&smart_reception_thread, NULL, normal_reception, (void*)0);
+    rc = pthread_create(&smart_reception_thread, NULL, smart_reception_ioctl, (void*)0);
+    //rc = pthread_create(&smart_reception_thread, NULL, normal_reception, (void*)0);
     if(rc != 0) {
         fprintf(stderr, "Failed to create smart reception thread\n");
         return 0;

@@ -36,3 +36,4 @@ int find_self_id(struct peer* peer_list);
 int build_peer_list(struct peer* peer_list);
 bool is_max_min_far(struct client_socket_info* client, int max, int min, int max_delta);
 void find_min_max(struct client_socket_info* client, int* max, int* min);
+double time_diff(struct timeval t1, struct timeval t2);
