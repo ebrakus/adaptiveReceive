@@ -22,11 +22,11 @@
 struct client_socket_info {
     int connfd;
     struct sockaddr_in client_addr;
-    int bytes_received;
+    long long bytes_received;
 };
 
 struct peer {
-    char name[256];
+    char name[DOMAIN_NAME_SIZE];
     struct sockaddr_in s_addr;
 };
 

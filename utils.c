@@ -29,6 +29,7 @@ void build_sockaddr(char* ip_str, struct sockaddr_in* address) {
 int find_self_id(struct peer* peer_list){
     struct in_addr p = find_eth0_ip_address();
     int self_addr = p.s_addr;
+	printf("%d\n", self_addr);
     int i = 0;
 
     for(i = 0; i < MESH_SIZE; i++) {
@@ -57,7 +58,7 @@ int build_peer_list(struct peer* peer_list) {
         if(temp == NULL) {
             return -1;
         }
-        memcpy(peer_list[count].name, hostname, DOMAIN_NAME_SIZE);
+        //memcpy(peer_list[count].name, hostname, DOMAIN_NAME_SIZE);
         memcpy(&peer_list[count].s_addr, temp, sizeof(struct sockaddr_in));
         printf("%d %s %d\n", count, peer_list[count].name, peer_list[count].s_addr.sin_addr.s_addr);
         count++;
